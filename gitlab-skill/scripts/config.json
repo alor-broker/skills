@@ -1,0 +1,6 @@
+{
+  "_comment": "This file is deprecated and should not contain real credentials",
+  "_see": "https://gitlab.example.com/user/settings/tokens",
+  "_instructions": "Use environment variables (GITLAB_HOST, GITLAB_TOKEN) or ~/.veles/gitlab_config.json",
+  "host": "https://gitlab.example.com"
+}

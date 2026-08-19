@@ -1,0 +1,5 @@
+{
+  "_comment": "This is an example configuration file",
+  "_note": "Copy this to ~/.veles/gitlab_config.json and store GITLAB_TOKEN in Veles secrets or environment variables",
+  "host": "https://gitlab.example.com"
+}
