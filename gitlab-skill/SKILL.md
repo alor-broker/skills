@@ -1,5 +1,5 @@
 ---
-name: gitlab
+name: gitlab-skill
 description: GitLab operations including creating and cloning repositories, listing projects, managing issues, merge requests, branches, commits, and pipelines. Use this skill for creating/cloning GitLab repos, browsing projects, creating/updating issues and MRs, and any GitLab API interaction. Supports both API operations and git operations.
 metadata: {"veles":{"emoji":"gitlab","secrets":{"env":["GITLAB_TOKEN"]}}}
 ---

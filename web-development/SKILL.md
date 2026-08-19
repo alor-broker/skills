@@ -1,6 +1,6 @@
 ---
 name: web-development
-description: Web application development using Next.js, SQLite, and Drizzle ORM. Use when: (1) Building or modifying web apps with this stack, (2) Handling HTTP requests routed to the app, (3) Working with database operations via Drizzle ORM, (4) Starting or managing the web server on Railway.
+description: "Web application development using Next.js, SQLite, and Drizzle ORM. Use when: (1) Building or modifying web apps with this stack, (2) Handling HTTP requests routed to the app, (3) Working with database operations via Drizzle ORM, (4) Starting or managing the web server on Railway."
 ---
 
 # Web Development
