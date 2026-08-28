@@ -48,20 +48,18 @@ def request_eutils(endpoint, params, email=None, api_key=None, tool=DEFAULT_TOOL
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
-    except requests.HTTPError as exc:
-        detail = response.text[:500].replace("\n", " ")
-        raise RuntimeError(f"NCBI {endpoint} failed with HTTP {response.status_code}: {detail}") from exc
-    except requests.RequestException as exc:
-        raise RuntimeError(f"NCBI {endpoint} request failed: {exc}") from exc
+    except requests.HTTPError:
+        raise RuntimeError(f"NCBI {endpoint} failed with HTTP {response.status_code}") from None
+    except requests.RequestException:
+        raise RuntimeError(f"NCBI {endpoint} request failed") from None
     return response
 
 
 def parse_json_response(response, endpoint):
     try:
         return response.json()
-    except ValueError as exc:
-        detail = response.text[:500].replace("\n", " ")
-        raise RuntimeError(f"NCBI {endpoint} returned non-JSON response: {detail}") from exc
+    except ValueError:
+        raise RuntimeError(f"NCBI {endpoint} returned a non-JSON response") from None
 
 
 def search(db, term, retmax=10, retstart=0, sort=None, email=None, api_key=None, tool=DEFAULT_TOOL):
@@ -128,12 +126,6 @@ def main():
     parser.add_argument("--retmax", type=int, default=10, help="Максимум результатов")
     parser.add_argument("--retstart", type=int, default=0, help="Смещение результатов")
     parser.add_argument("--sort", default=None, help="Порядок сортировки, например relevance или date")
-    parser.add_argument("--email", default=os.environ.get("NCBI_EMAIL"), help="Email для NCBI (опционально)")
-    parser.add_argument(
-        "--api-key",
-        default=os.environ.get("NCBI_API_KEY"),
-        help="NCBI API key (опционально; можно хранить как секрет NCBI_API_KEY)",
-    )
     parser.add_argument(
         "--tool",
         default=os.environ.get("NCBI_TOOL", DEFAULT_TOOL),
@@ -145,6 +137,8 @@ def main():
     
     args = parser.parse_args()
     db = normalize_db(args.db)
+    email = os.environ.get("NCBI_EMAIL")
+    api_key = os.environ.get("NCBI_API_KEY")
     
     # Поиск
     print(f"Поиск: {args.term} в {db}...")
@@ -154,8 +148,8 @@ def main():
         retmax=args.retmax,
         retstart=args.retstart,
         sort=args.sort,
-        email=args.email,
-        api_key=args.api_key,
+        email=email,
+        api_key=api_key,
         tool=args.tool,
     )
     
@@ -165,20 +159,20 @@ def main():
         print(f"Query translation: {search_result['querytranslation']}")
     
     if args.summary and search_result.get("idlist"):
-        time.sleep(0.34 if args.api_key else 0.5)  # Rate limiting
+        time.sleep(0.34 if api_key else 0.5)  # Rate limiting
         print("\nСводка:")
-        summ = summary(db, search_result["idlist"], email=args.email, api_key=args.api_key, tool=args.tool)
+        summ = summary(db, search_result["idlist"], email=email, api_key=api_key, tool=args.tool)
         print(json.dumps(summ, indent=2, ensure_ascii=False))
     
     if args.abstracts and search_result.get("idlist"):
-        time.sleep(0.34 if args.api_key else 0.5)
+        time.sleep(0.34 if api_key else 0.5)
         print("\nАбстракты:")
         abstracts = fetch_abstracts(
             db,
             search_result["idlist"],
             rettype=args.rettype,
-            email=args.email,
-            api_key=args.api_key,
+            email=email,
+            api_key=api_key,
             tool=args.tool,
         )
         print(abstracts.get("text") or abstracts.get("error", ""))

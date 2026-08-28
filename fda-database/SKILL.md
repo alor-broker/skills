@@ -1,6 +1,6 @@
 ---
 name: fda-database
-description: Search official FDA/openFDA medication and pill data, including drug labels, NDC product records, recalls/enforcement, adverse-event reports, Drugs@FDA approvals, shortages, and substance identifiers. Use for drug label facts, pill/product identification by NDC or ingredient, warnings, contraindications, recalls, shortages, adverse-event signal checks, and FDA regulatory data. Use entrez-search as a literature fallback, not as the primary source for drug labels.
+description: "Search official United States FDA/openFDA drug labels, products, recalls, reports, approvals, and shortages; use the local regulator elsewhere. / Искать официальные сведения FDA/openFDA США об инструкциях, препаратах, отзывах, сообщениях, одобрениях и дефиците; для других стран использовать местный регулятор."
 metadata: {"veles":{"secrets":{"env":["OPENFDA_API_KEY"]}}}
 ---
 
@@ -25,8 +25,7 @@ Do not present FAERS/openFDA adverse-event reports as proof that a drug caused a
 Do not require an API key. The script works without one at lower openFDA daily limits.
 
 - Store the optional key in Veles Secrets as `skills.fda-database.env.OPENFDA_API_KEY`.
-- The script reads `OPENFDA_API_KEY` first and also accepts `FDA_API_KEY` for compatibility.
-- Pass `--api-key` only when the user explicitly provides a key for the run.
+- The script reads only the injected `OPENFDA_API_KEY` environment value. Never put the key in command arguments or output.
 
 ## Script workflow
 
@@ -47,7 +46,6 @@ Useful options:
 - `--count`: aggregation field.
 - `--limit`: result count, default `10`.
 - `--skip`: pagination offset.
-- `--api-key`: optional openFDA key.
 - `--fields`: comma-separated fields to print from each result.
 - `--raw`: print full JSON.
 
@@ -85,6 +83,7 @@ python scripts/fda_query.py substance --search 'names.name:"acetaminophen"' --li
 
 ## Source boundaries
 
+- FDA/openFDA is specific to the United States. Ask for jurisdiction before applying regulatory information. For Russia, verify the current GRLS record and Roszdravnadzor safety material; do not present FDA status as Russian registration or instructions.
 - Prefer FDA label/openFDA label or DailyMed for current prescribing information.
 - Prefer NDC records for product/package identity, labeler, route, dosage form, marketing status, and NDCs.
 - Prefer enforcement reports for recalls.

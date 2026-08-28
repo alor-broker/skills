@@ -57,7 +57,7 @@ https://eutils.ncbi.nlm.nih.gov/entrez/eutils/
 - Use field tags: `[ti]`, `[tiab]`, `[au]`, `[1au]`, `[ta]`, `[dp]`, `[pt]`, `[mh]`, `[majr]`, `[pmid]`, `[doi]`, `[pmc]`.
 - Use MeSH for controlled vocabulary: `diabetes mellitus, type 2[mh]`.
 - Use publication types for evidence filters: `systematic review[pt]`, `meta-analysis[pt]`, `randomized controlled trial[pt]`, `guideline[pt]`.
-- Use date ranges: `2020:2026[dp]`.
+- Use explicit date ranges such as `<start-year>:<current-year>[dp]`, deriving both years from the current date and the question.
 - Add `hasabstract[text]`, `english[la]`, or `free full text[sb]` only when those filters match the user's goal.
 
 ## Medical workflows

@@ -206,11 +206,6 @@ def main() -> int:
     parser.add_argument("--count", help="Aggregate by field instead of returning records")
     parser.add_argument("--limit", type=int, default=10, help="Number of records to return")
     parser.add_argument("--skip", type=int, default=0, help="Pagination offset")
-    parser.add_argument(
-        "--api-key",
-        default=os.environ.get("OPENFDA_API_KEY") or os.environ.get("FDA_API_KEY"),
-        help="Optional openFDA API key",
-    )
     parser.add_argument("--fields", help="Comma-separated fields to print from each result")
     parser.add_argument("--raw", action="store_true", help="Print the raw API response")
     parser.add_argument("--max-chars", type=int, default=700, help="Maximum characters per string field")
@@ -227,7 +222,7 @@ def main() -> int:
             count=args.count,
             limit=args.limit,
             skip=args.skip,
-            api_key=args.api_key,
+            api_key=os.environ.get("OPENFDA_API_KEY"),
         )
     except OpenFDAError as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2), file=sys.stderr)

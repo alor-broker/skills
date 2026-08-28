@@ -1,7 +1,7 @@
 ---
 name: entrez-search
-description: Search and retrieve biomedical/scientific records through NCBI Entrez E-utilities, including PubMed, PMC, Gene, Protein, Nuccore, ClinVar, PubChem, MeSH, and SNP. Use for literature search, abstracts, PMIDs, gene/protein lookup, ClinVar records, and NCBI cross-database retrieval. For drug labels use fda-database, not Entrez.
-metadata: {"veles":{"secrets":{"env":["NCBI_API_KEY"]}}}
+description: "Search biomedical records through NCBI Entrez, including PubMed, PMC, ClinVar, and related databases; use fda-database for drug labels. / Искать биомедицинские записи через NCBI Entrez, включая PubMed, PMC, ClinVar и связанные базы; для инструкций лекарств использовать fda-database."
+metadata: {"veles":{"secrets":{"env":["NCBI_API_KEY","NCBI_EMAIL"]}}}
 ---
 
 # Entrez Search
@@ -20,9 +20,10 @@ pip install requests
 
 Do not require `email` or `api_key` for normal use.
 
-- Use `--email` or `NCBI_EMAIL` when the user provides an email or the query is large.
-- Use `--api-key` or the injected `NCBI_API_KEY` secret when configured. Veles exposes this optional target as `skills.entrez-search.env.NCBI_API_KEY`.
+- Use the injected `NCBI_EMAIL` only when the user explicitly configures it for large or repeated queries. Veles exposes this optional target as `skills.entrez-search.env.NCBI_EMAIL`.
+- Use the injected `NCBI_API_KEY` secret when configured. Veles exposes this optional target as `skills.entrez-search.env.NCBI_API_KEY`.
 - Use `--tool` to identify the client; the script defaults to `veles-entrez-search`.
+- Never place the email or API key in command arguments or output.
 
 ## Databases
 
@@ -58,14 +59,16 @@ Common options:
 - `--summary`: run ESummary for returned IDs.
 - `--abstracts`: run PubMed EFetch for abstracts.
 - `--rettype`: EFetch `rettype` for `--abstracts`, default `abstract`.
-- `--email`, `--api-key`, `--tool`: optional NCBI identity parameters.
+- `--tool`: optional public client identifier. Email and API key are read only from the injected environment.
 
 For latest/recent medical evidence in PubMed, prefer `--sort date` and include a date filter:
 
 ```bash
 python scripts/entrez_search.py --db pubmed --sort date --retmax 10 --summary \
-  --term "(asthma[mh] OR asthma[tiab]) AND (systematic review[pt] OR meta-analysis[pt]) AND 2020:2026[dp] AND hasabstract[text]"
+  --term "(asthma[mh] OR asthma[tiab]) AND (systematic review[pt] OR meta-analysis[pt]) AND hasabstract[text]"
 ```
+
+When a date limit is needed, derive the explicit PubMed date range from the current date and the clinical question. Do not reuse a fixed example year range as if it were current.
 
 ## Medical search strategy
 
@@ -85,7 +88,7 @@ Useful PubMed filters:
 - `clinical trial[pt]`
 - `guideline[pt]`
 - `practice guideline[pt]`
-- `2020:2026[dp]`
+- an explicit `[dp]` range derived from the current date and question
 - `english[la]`
 - `hasabstract[text]`
 - `free full text[sb]`
@@ -103,7 +106,6 @@ Example evidence-first query:
 (asthma[mh] OR asthma[tiab])
 AND (treatment[tiab] OR therapy[tiab])
 AND (systematic review[pt] OR meta-analysis[pt] OR randomized controlled trial[pt])
-AND 2020:2026[dp]
 AND hasabstract[text]
 ```
 
