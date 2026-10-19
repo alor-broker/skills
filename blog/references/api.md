@@ -1,6 +1,6 @@
 # Blog API contracts
 
-Credentials in both modes are encrypted `BLOG_USERNAME` and `BLOG_APP_PASSWORD`. The default API is `<blogUrl>/wp-json/wp/v2`; `apiBaseUrl` explicitly selects another HTTPS base ending in `/wp/v2` or `/author-app/v1`. There is no automatic protocol or host fallback.
+Both modes read the login only from `skills.entries.blog.config.username` and the Application Password from encrypted `BLOG_APP_PASSWORD`. The old `BLOG_USERNAME` environment secret is ignored. The default API is `<blogUrl>/wp-json/wp/v2`; `apiBaseUrl` explicitly selects another HTTPS base ending in `/wp/v2` or `/author-app/v1`. There is no automatic protocol or host fallback.
 
 ## Standard WordPress
 
@@ -37,6 +37,6 @@ The supplied Gavrilenko `content.php` renders the title separately, then body, t
 
 ## Diagnostics and migration
 
-`BLOG_TOKEN` is unused. Existing Application Password secrets work with either selected mode; do not rename them or copy their values into settings. Select author-app explicitly with `apiBaseUrl`, and adapt the image payload accordingly.
+`BLOG_TOKEN` and `BLOG_USERNAME` secrets are unused. Set the ordinary `config.username` field explicitly when updating. The existing `BLOG_APP_PASSWORD` secret works with either selected mode; never copy its value into settings. Select author-app explicitly with `apiBaseUrl`, and adapt the image payload accordingly.
 
 Error output retains HTTP status plus bounded, redacted code/message fields. Error bodies are limited to 64 KiB; successful content responses to 2 MiB. Login responses are separately bounded and never returned directly. Session failure sends no content request. Write failures after successful authentication may require reconciliation; no automatic retry is performed.

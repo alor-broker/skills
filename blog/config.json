@@ -1,5 +1,11 @@
 {
   "veles": {
+    "username": {
+      "type": "string",
+      "required": true,
+      "minLength": 1,
+      "maxLength": 256
+    },
     "blogUrl": {
       "type": "string",
       "required": true,

@@ -17,7 +17,6 @@ from urllib.parse import urlsplit, urlunsplit
 import httpx
 from PIL import Image
 
-USERNAME_ENV = "BLOG_USERNAME"
 PASSWORD_ENV = "BLOG_APP_PASSWORD"
 MAX_PAYLOAD = 2 * 1024 * 1024
 MAX_RESPONSE = 2 * 1024 * 1024
@@ -51,7 +50,16 @@ def validate_url(value: Any) -> str:
     return urlunsplit(parts).rstrip("/")
 
 
-def load_settings(path: Path) -> tuple[str, str]:
+def validate_username(value: Any) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise BlogError("Set skills.entries.blog.config.username to the WordPress login. The old BLOG_USERNAME secret is not used.")
+    username = value.strip()
+    if ":" in username or len(username) > 256 or any(ord(char) < 32 or ord(char) == 127 for char in username):
+        raise BlogError("skills.entries.blog.config.username has an invalid format.")
+    return username
+
+
+def load_settings(path: Path) -> tuple[str, str, str]:
     """Read only non-secret settings from the explicitly selected Veles config."""
     try:
         source = json.loads(read_bounded(path, 4 * 1024 * 1024).decode("utf-8-sig"))
@@ -59,11 +67,12 @@ def load_settings(path: Path) -> tuple[str, str]:
         if entry.get("enabled") is False:
             raise BlogError("The blog skill is disabled in the selected Veles configuration.")
         settings = entry["config"]
+        username = validate_username(settings.get("username"))
         blog_url = validate_url(settings["blogUrl"])
         api_base = validate_url(settings.get("apiBaseUrl", blog_url + "/wp-json/wp/v2"))
         if not urlsplit(api_base).path.endswith(("/wp/v2", "/author-app/v1")):
             raise BlogError("apiBaseUrl must end in /wp/v2 or /author-app/v1.")
-        return blog_url, api_base
+        return blog_url, api_base, username
     except (ValueError, KeyError, TypeError, AttributeError, RecursionError):
         raise BlogError("Set skills.entries.blog.config.blogUrl in the selected Veles config.json; set apiBaseUrl only if the WordPress REST API uses a different address.") from None
 
@@ -175,15 +184,13 @@ def error_details(response: httpx.Response, secrets: tuple[str, ...]) -> dict[st
     return details
 
 
-def request(api_base: str, method: str, path: str, **kwargs: Any) -> Any:
-    username = os.environ.get(USERNAME_ENV, "").strip()
+def request(api_base: str, method: str, path: str, *, username: str, **kwargs: Any) -> Any:
+    username = validate_username(username)
     raw_password = os.environ.get(PASSWORD_ENV, "")
     # WordPress displays Application Passwords in space-separated groups.
     password = "".join(raw_password.split())
-    if not username or not password:
-        raise BlogError(f"Set the encrypted skill secrets {USERNAME_ENV} and {PASSWORD_ENV} in Veles first.")
-    if ":" in username or len(username) > 256 or any(ord(char) < 32 or ord(char) == 127 for char in username):
-        raise BlogError("The WordPress username has an invalid format.")
+    if not password:
+        raise BlogError(f"Set the encrypted skill secret {PASSWORD_ENV} in Veles first.")
     if len(password) > 8192 or any(ord(char) < 33 or ord(char) > 126 for char in password):
         raise BlogError("The Application Password has an invalid format.")
     auth = httpx.BasicAuth(username, password)
@@ -281,12 +288,12 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("check-auth", help="Verify API access without creating posts or media.")
     args = parser.parse_args(argv)
     try:
-        blog_url, api_base = load_settings(args.config)
+        blog_url, api_base, username = load_settings(args.config)
         author_app = urlsplit(api_base).path.endswith("/author-app/v1")
         if args.command == "create":
             payload = load_payload(args.payload, author_app=author_app)
-            result = request(api_base, "POST", "/posts", json=payload) if args.execute else {
-                "preview": True, "blog": blog_url, "destination": api_base + "/posts", "payload": payload,
+            result = request(api_base, "POST", "/posts", username=username, json=payload) if args.execute else {
+                "preview": True, "blog": blog_url, "destination": api_base + "/posts", "username": username, "payload": payload,
             }
         elif args.command == "upload":
             if author_app and args.alt_text:
@@ -296,18 +303,18 @@ def main(argv: list[str] | None = None) -> int:
             if not title.strip():
                 raise BlogError("Image title must not be empty.")
             result = request(
-                api_base, "POST", "/media", data={"title": title} if author_app else {"title": title, "alt_text": args.alt_text},
+                api_base, "POST", "/media", username=username, data={"title": title} if author_app else {"title": title, "alt_text": args.alt_text},
                 files={"file": (args.file.name, data, mime)},
             ) if args.execute else {
-                "preview": True, "blog": blog_url, "destination": api_base + "/media",
+                "preview": True, "blog": blog_url, "destination": api_base + "/media", "username": username,
                 "filename": args.file.name, "title": title, "alt_text": args.alt_text, "mime": mime, "bytes": len(data),
             }
         elif args.command == "check-auth":
-            result = request(api_base, "GET", "/config") if author_app else request(api_base, "GET", "/users/me", params={
+            result = request(api_base, "GET", "/config", username=username) if author_app else request(api_base, "GET", "/users/me", username=username, params={
                 "context": "edit", "_fields": "id,name,slug,roles,capabilities",
             })
         else:
-            result = request(api_base, "GET", f"/posts/{args.post_id}", params={} if author_app else {"context": "edit"})
+            result = request(api_base, "GET", f"/posts/{args.post_id}", username=username, params={} if author_app else {"context": "edit"})
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
     except BlogError as exc:

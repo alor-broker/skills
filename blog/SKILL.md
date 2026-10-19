@@ -1,7 +1,7 @@
 ---
 name: blog
 description: Prepare and publish WordPress blog posts with images using Application Passwords. Supports the standard REST API and an explicitly configured Writer Studio author-app API. Use for requests to draft or publish to the configured blog, including «опубликуй статью в блоге», upload images, verify a post, or diagnose blog authentication.
-metadata: {"veles":{"secrets":{"env":["BLOG_USERNAME","BLOG_APP_PASSWORD"]}}}
+metadata: {"veles":{"secrets":{"env":["BLOG_APP_PASSWORD"]}}}
 ---
 
 # Blog
@@ -10,9 +10,9 @@ Use `scripts/blog.py` with Veles's Python environment (httpx and Pillow are incl
 
 ## Settings and credentials
 
-- Ordinary settings live in the active Veles `config.json` under `skills.entries.blog.config`. `blogUrl` is the public blog URL; optional `apiBaseUrl` selects the API base. The default is `<blogUrl>/wp-json/wp/v2`. The skill's own `config.json` is only a settings schema.
+- Ordinary settings live in the active Veles `config.json` under `skills.entries.blog.config`. `blogUrl` is the public blog URL; required `username` is the WordPress login; optional `apiBaseUrl` selects the API base. The default is `<blogUrl>/wp-json/wp/v2`. The skill's own `config.json` is only a settings schema.
 - Always pass the active Veles configuration file with `--config`. Do not guess another instance's configuration. The helper reads ordinary settings without modifying the file or printing its contents.
-- Keep the WordPress login in encrypted secret `skills.blog.env.BLOG_USERNAME` and the generated Application Password in `skills.blog.env.BLOG_APP_PASSWORD`. Veles injects them into the process. Never put values in commands, payload files, ordinary settings, or chat output. Application Password grouping spaces are removed automatically. `BLOG_TOKEN` is not used.
+- Read the WordPress login only from `skills.entries.blog.config.username`. Keep only the generated Application Password in encrypted secret `skills.blog.env.BLOG_APP_PASSWORD`; Veles injects the password into the process. Never put the password in commands, payload files, ordinary settings, or chat output. Application Password grouping spaces are removed automatically. Old `BLOG_USERNAME` and `BLOG_TOKEN` secrets are ignored; there is no environment fallback for the login. When updating an existing installation, set `config.username` explicitly before making a request. Local previews show the configured login so the user can verify it.
 - Read [references/api.md](references/api.md) before choosing request fields. Both supported modes use the same Application Password credentials, but their authentication and post formats differ:
 
 | Configured API suffix | Authentication | Post images |
