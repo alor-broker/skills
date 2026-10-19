@@ -1,6 +1,6 @@
 ---
 name: blog
-description: Prepare and publish WordPress blog posts with images using Application Passwords. Supports the standard REST API and an explicitly configured Writer Studio author-app API. Use for requests to draft or publish to the configured blog, including «опубликуй статью в блоге», upload images, verify a post, or diagnose blog authentication.
+description: Prepare and publish WordPress blog posts with images and videos using Application Passwords. Supports the standard REST API and an explicitly configured Writer Studio author-app API. Use for requests to draft or publish to the configured blog, including «опубликуй статью в блоге», upload images or videos, verify a post, or diagnose blog authentication.
 metadata: {"veles":{"secrets":{"env":["BLOG_APP_PASSWORD"]}}}
 ---
 
@@ -22,7 +22,7 @@ Here ffmpeg means the FFmpeg command-line executable installed on the host. Invo
 
 Expect attached videos to often be `.mov` (case-insensitive). Before uploading a MOV, use ffmpeg to convert it to a separate `.mp4` file; renaming the extension is not conversion. Check whether ffmpeg is installed. If missing, the user authorizes installing it through the host's normal trusted package manager or official distribution, subject to the host's execution permissions. Install only when conversion is needed. If installation is blocked, explain the limitation and stop the video upload.
 
-Create a new output file without overwriting anything (`ffmpeg -n`, with a unique destination). Prefer broadly playable H.264 video and AAC audio when audio is present, preserve orientation and aspect ratio, and use MP4 fast-start layout. Verify the converted file with ffprobe or an equivalent media inspection and provide a playable preview for the publication confirmation. Do not silently crop, trim, remove audio, or change the intended content. Keep the original MOV and converted MP4. Conversion guidance does not mean the current helper implements video-job uploads; use a verified supported upload workflow once available.
+Create a new output file without overwriting anything (`ffmpeg -n`, with a unique destination). Prefer broadly playable H.264 video and AAC audio when audio is present, preserve orientation and aspect ratio, and use MP4 fast-start layout. Verify the converted file with ffprobe or an equivalent media inspection and provide a playable preview for the publication confirmation. Do not silently crop, trim, remove audio, or change the intended content. Keep the original MOV and converted MP4. Conversion is performed by the agent through the shell only. The separate `scripts/upload_video.py` accepts the prepared MP4 and handles upload and processing checks. For any video task, read [references/video.md](references/video.md) and follow its workflow.
 
 ### Never delete within this skill
 
@@ -57,7 +57,7 @@ Report `http_status`, `wp_code`, `wp_message`, and `phase` when present. `rest_n
 ## Prepare and publish
 
 1. Prepare the exact title, body, and ordered images locally. Use WordPress-compatible HTML; Markdown is not automatically converted. Keep the title separate and preserve the user's language and meaning.
-2. Save UTF-8 JSON containing `title`, `content`, and explicit `status`. The current helper supports `draft` and `publish` for standard WordPress and only `publish` for author-app. The supplied author-app example also demonstrates an empty remote draft, but that path is not yet implemented in this helper. Choose the image field for the configured API. Never silently drop unsupported fields.
+2. Save UTF-8 JSON containing `title`, `content`, and explicit `status`. The helper supports `draft` and `publish` in both modes. An author-app draft may have empty content for a video post. Video tasks use the dedicated [video workflow](references/video.md): prepare MP4, create/reuse a draft, upload, verify, confirm, and publish that draft. Choose the image field for the configured API. Never silently drop unsupported fields.
 3. Preview locally without credentials or network calls:
 
    ```text
@@ -76,7 +76,7 @@ Report `http_status`, `wp_code`, `wp_message`, and `phase` when present. `rest_n
 7. Verify that the final payload matches the complete post the user has seen and explicitly confirmed. Only then submit once and read back the returned ID:
 
    ```text
-   python <skill-dir>/scripts/blog.py --config <active-veles-config.json> create --payload <workspace>/blog-post.json --execute
+   python <skill-dir>/scripts/blog.py --config <active-veles-config.json> create --payload <workspace>/blog-post.json --execute --confirmed
    python <skill-dir>/scripts/blog.py --config <active-veles-config.json> get --post-id <returned-positive-id>
    ```
 
@@ -88,4 +88,4 @@ Error output retains bounded WordPress code/message fields with credentials reda
 
 Do not automatically repeat a write after a timeout, lost connection, malformed response, or server error: it may already have succeeded. Preserve IDs, reconcile through the author interface or `get`, and reuse uploaded media. A new user-authorized attempt after a confirmed rejection is not an automatic retry; diagnose the cause first and retain the publication-confirmation requirement. Do not create duplicate posts or delete anything as cleanup.
 
-Existing-post edits, publishing a previously created draft, scheduling, video uploads, and comments are not implemented in the helper. The user may request extensions to these features; retain the confirmation, video-conversion, and no-deletion guardrails. Deletion is prohibited by the user's explicit skill rule, not merely unimplemented. See [Russian setup and troubleshooting](references/setup_ru.md).
+MP4 upload and processing checks are implemented in `scripts/upload_video.py`; it does not convert files or edit/publish posts. The separate `blog.py publish` command publishes an existing draft only after confirmation. General existing-post content editing, scheduling, and comments are not implemented. The user may request extensions to these features; retain the confirmation, video-conversion, and no-deletion guardrails. Deletion is prohibited by the user's explicit skill rule, not merely unimplemented. See [Russian setup and troubleshooting](references/setup_ru.md).

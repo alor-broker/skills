@@ -26,10 +26,10 @@ Observed on 2026-10-19 from the public [API index](https://ag.yourwpcare.com/wp-
 - `POST /auth/refresh`: client sends `{refresh_token}` and reads the same token fields. This helper does not persist or refresh tokens: it opens a fresh session per command and discards tokens on exit. Server-side sessions may remain until expiry; the helper does not call logout or revoke sessions.
 - `GET /config`: used by the client to check the configured connection. The helper uses it after session exchange for `check-auth`; it does not interpret the result as WordPress roles/capabilities.
 - `POST /media`: multipart file with actual image bytes and title, established by the supplied request example. Alt text is not verified here.
-- `POST /posts`: title, content, status publish, optional image_media_ids, established by the supplied example. Remote drafts are not verified here.
+- `POST /posts`: title, content, status draft/publish, optional image_media_ids. The supplied video example confirms an empty-content draft returning a post ID.
 - `GET /posts/{id}`: read-back without the standard WordPress context parameter.
 
-The route index alone does not describe authentication bodies; those were observed in the served client. These public observations do not prove that a particular saved credential will succeed. No authenticated live session exchange was performed during implementation. Never print token responses or send secrets to the Writer Studio HTML frontend instead of the configured API.
+The route index alone does not describe authentication bodies; those were observed in the served client. These public observations do not prove that a particular saved credential will succeed. The earlier local authentication and simple text publication were verified; no live video upload was performed for this implementation. Never print token responses or send secrets to the Writer Studio HTML frontend instead of the configured API.
 
 ## Display template
 
@@ -40,3 +40,11 @@ The supplied Gavrilenko `content.php` renders the title separately, then body, t
 `BLOG_TOKEN` and `BLOG_USERNAME` secrets are unused. Set the ordinary `config.username` field explicitly when updating. The existing `BLOG_APP_PASSWORD` secret works with either selected mode; never copy its value into settings. Select author-app explicitly with `apiBaseUrl`, and adapt the image payload accordingly.
 
 Error output retains HTTP status plus bounded, redacted code/message fields. Error bodies are limited to 64 KiB; successful content responses to 2 MiB. Login responses are separately bounded and never returned directly. Session failure sends no content request. Write failures after successful authentication may require reconciliation; no automatic retry is performed.
+
+## Video jobs
+
+The supplied captures establish `POST /video-jobs` with `filename`, `mime_type`, `post_id`, `cors_origin`, and an `Idempotency-Key` header. Its response contains `id`, status, and `upload: {url, method: "PUT"}`. The signed URL receives the actual MP4 bytes without WordPress credentials. `GET /video-jobs/{uuid}` reports processing.
+
+The public Writer Studio client confirms terminal `completed`/`failed` and intermediate `pending_client_upload`, `processing`, `ready_for_archive`, `archiving_to_wp`. It reads the post again on completion; the backend attaches the video using `post_id`. The supplied completed post includes `videos_media` with a UUID-based MP4 URL. The uploader verifies that association before reporting success. It does not invent writable video-ID fields.
+
+The final `PATCH /posts/{id}` with `status: "publish"` publishes the same draft. The helper sends only that field, leaving title, body, and attachments intact. See [video.md](video.md) for the complete workflow, bounded polling, and interrupted-upload handling. MOV conversion is an agent instruction, never Python behavior.

@@ -97,14 +97,15 @@ def load_payload(path: Path, *, author_app: bool = False) -> dict[str, Any]:
     allowed = {"title", "content", "status", media_field}
     if not isinstance(payload, dict) or set(payload) - allowed:
         raise BlogError(f"Payload accepts only title, content, status, and {media_field} for the configured API. image_media_ids is only supported by author-app/v1.")
-    for key in ("title", "content"):
-        if not isinstance(payload.get(key), str) or not payload[key].strip():
-            raise BlogError(f"Payload requires a nonempty {key} string.")
+    if not isinstance(payload.get("title"), str) or not payload["title"].strip():
+        raise BlogError("Payload requires a nonempty title string.")
+    if not isinstance(payload.get("content"), str):
+        raise BlogError("Payload requires a content string.")
+    if not payload["content"].strip() and not (author_app and payload.get("status") == "draft"):
+        raise BlogError("Empty content is allowed only for an author-app draft.")
     if payload.get("status") not in ("draft", "publish"):
         raise BlogError("Set an explicit status of draft or publish; preview is local by default.")
     if author_app:
-        if payload["status"] != "publish":
-            raise BlogError("Only publish is verified for author-app/v1; local previews remain available.")
         ids = payload.get("image_media_ids", [])
         if not isinstance(ids, list) or any(type(item) is not int or item <= 0 for item in ids):
             raise BlogError("image_media_ids must contain positive integers.")
@@ -185,6 +186,11 @@ def error_details(response: httpx.Response, secrets: tuple[str, ...]) -> dict[st
 
 
 def request(api_base: str, method: str, path: str, *, username: str, **kwargs: Any) -> Any:
+    if method not in ("GET", "POST", "PATCH") or "remove-attachment" in path:
+        raise BlogError("Deletion and attachment removal are disabled.")
+    extra_headers = kwargs.pop("headers", {})
+    if set(extra_headers) - {"Idempotency-Key"}:
+        raise BlogError("Only Idempotency-Key may be added to API headers.")
     username = validate_username(username)
     raw_password = os.environ.get(PASSWORD_ENV, "")
     # WordPress displays Application Passwords in space-separated groups.
@@ -198,7 +204,7 @@ def request(api_base: str, method: str, path: str, *, username: str, **kwargs: A
     authorization = next(auth.auth_flow(httpx.Request("GET", api_base))).headers["Authorization"]
     secrets = (raw_password, password, authorization, authorization.split(" ", 1)[1])
     phase = "authentication" if urlsplit(api_base).path.endswith("/author-app/v1") else "content"
-    uncertain = " The write may already have succeeded; check the author interface before retrying." if method == "POST" else ""
+    uncertain = " The write may already have succeeded; check the author interface before retrying." if method in ("POST", "PATCH") else ""
     try:
         # Explicitly disable redirects, environment proxies, and transport retries.
         with httpx.Client(timeout=httpx.Timeout(60, connect=15), follow_redirects=False, trust_env=False) as client:
@@ -232,7 +238,7 @@ def request(api_base: str, method: str, path: str, *, username: str, **kwargs: A
                 phase = "content"
             with client.stream(
                 method, api_base + path,
-                headers=headers, auth=auth,
+                headers={**headers, **extra_headers}, auth=auth,
                 **kwargs,
             ) as response:
                 if not 200 <= response.status_code < 300:
@@ -278,6 +284,7 @@ def main(argv: list[str] | None = None) -> int:
     create = commands.add_parser("create", help="Preview locally, or create a draft/published post with --execute.")
     create.add_argument("--payload", type=Path, required=True)
     create.add_argument("--execute", action="store_true")
+    create.add_argument("--confirmed", action="store_true", help="User confirmed the complete final post after preview.")
     upload = commands.add_parser("upload", help="Validate locally, or upload with --execute.")
     upload.add_argument("--file", type=Path, required=True)
     upload.add_argument("--title")
@@ -286,12 +293,18 @@ def main(argv: list[str] | None = None) -> int:
     get = commands.add_parser("get", help="Read an existing post by ID.")
     get.add_argument("--post-id", type=positive_id, required=True)
     commands.add_parser("check-auth", help="Verify API access without creating posts or media.")
+    publish = commands.add_parser("publish", help="Read a draft, or publish it after user confirmation.")
+    publish.add_argument("--post-id", type=positive_id, required=True)
+    publish.add_argument("--execute", action="store_true")
+    publish.add_argument("--confirmed", action="store_true")
     args = parser.parse_args(argv)
     try:
         blog_url, api_base, username = load_settings(args.config)
         author_app = urlsplit(api_base).path.endswith("/author-app/v1")
         if args.command == "create":
             payload = load_payload(args.payload, author_app=author_app)
+            if args.execute and payload["status"] == "publish" and not args.confirmed:
+                raise BlogError("Show the complete post and obtain user confirmation before --execute --confirmed.")
             result = request(api_base, "POST", "/posts", username=username, json=payload) if args.execute else {
                 "preview": True, "blog": blog_url, "destination": api_base + "/posts", "username": username, "payload": payload,
             }
@@ -313,6 +326,26 @@ def main(argv: list[str] | None = None) -> int:
             result = request(api_base, "GET", "/config", username=username) if author_app else request(api_base, "GET", "/users/me", username=username, params={
                 "context": "edit", "_fields": "id,name,slug,roles,capabilities",
             })
+        elif args.command == "publish":
+            if args.execute and not args.confirmed:
+                raise BlogError("Show the complete draft and media, then obtain user confirmation before --execute --confirmed.")
+            post = request(api_base, "GET", f"/posts/{args.post_id}", username=username,
+                           params={} if author_app else {"context": "edit"})
+            if not isinstance(post, dict) or post.get("id") != args.post_id:
+                raise BlogError("Unexpected post response; no publication request was sent.")
+            if not args.execute:
+                result = {"preview": True, "blog": blog_url, "post": post}
+            elif post.get("status") == "publish":
+                result = {"already_published": True, "post": post}
+            elif post.get("status") != "draft":
+                raise BlogError("Only an existing draft can be published by this command.")
+            else:
+                request(api_base, "PATCH" if author_app else "POST", f"/posts/{args.post_id}",
+                        username=username, json={"status": "publish"})
+                result = request(api_base, "GET", f"/posts/{args.post_id}", username=username,
+                                 params={} if author_app else {"context": "edit"})
+                if not isinstance(result, dict) or result.get("id") != args.post_id or result.get("status") != "publish":
+                    raise BlogError("Publication was sent but not confirmed by read-back. Inspect the existing post; no retry was made.")
         else:
             result = request(api_base, "GET", f"/posts/{args.post_id}", username=username, params={} if author_app else {"context": "edit"})
         print(json.dumps(result, ensure_ascii=False, indent=2))
