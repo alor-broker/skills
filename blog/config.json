@@ -1,0 +1,18 @@
+{
+  "veles": {
+    "blogUrl": {
+      "type": "string",
+      "required": true,
+      "minLength": 9,
+      "maxLength": 2048,
+      "pattern": "https://[^\\s]+"
+    },
+    "apiBaseUrl": {
+      "type": "string",
+      "required": false,
+      "minLength": 9,
+      "maxLength": 2048,
+      "pattern": "https://[^\\s]+"
+    }
+  }
+}
