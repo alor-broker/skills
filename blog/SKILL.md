@@ -8,6 +8,20 @@ metadata: {"veles":{"secrets":{"env":["BLOG_APP_PASSWORD"]}}}
 
 Use `scripts/blog.py` with Veles's Python environment (httpx and Pillow are included). Resolve its path relative to this loaded skill. Windows portable installations require the bundled full Python runtime. Respond in the user's language, including English and Russian.
 
+## Make publication status and usable links obvious
+
+The user must never have to infer whether the post is public or ask for a link that is already available. Treat status and links as part of the deliverable, not optional follow-up information.
+
+- At the start, explain the next steps in one sentence: prepare an unpublished draft, show the complete post and video, then publish after the user's confirmation. Do not suggest that uploading alone makes a post public.
+- In progress updates and every handoff, lead with the actual state: **Preparing — not published**, **Draft — not published; video processing**, **Draft ready — NOT PUBLISHED; awaiting your confirmation**, **Published**, or **Publication not confirmed**. Say a draft exists only after creation is verified. Explain the practical meaning: an unpublished draft does not appear in the public blog feed.
+- As soon as a working video/media URL is available, include it as a clickable link automatically, together with the status. Prefer an inline playable preview when supported, and retain the direct **Watch video** / **Смотреть видео** link. Use the real returned media URL; do not expose signed Mux upload URLs. Check link accessibility when possible and do not label an unchecked link as verified.
+- A draft's API `permalink` (for example `?p=<id>`) is not a public review link. Never present it simply as “the post link” or make it the main way to review the draft. Show the full post in chat plus the accessible video/media links instead. Include an editor or authenticated-preview link only when its actual route is known, clearly labelled **Edit draft — WordPress login required** / **Открыть черновик — нужен вход в WordPress**. If no usable draft-page preview is available, say so before the user clicks anything. Do not invent preview tokens, editor routes, or working public URLs.
+- The draft-ready message must contain the prominent unpublished status, full title/body/media, the target blog, working review links, and one explicit publication-confirmation question. Do not stop at “uploaded and verified” or describe an unpublished draft as a completed publication. A post can remain unpublished while its uploaded media is accessible by direct link; do not promise that the media is private.
+- After confirmation, publish the same reviewed draft without another permission question unless its content/target changed. Then automatically provide **Published: [title](actual returned public permalink)** and the direct video link when present. Verify the public page when possible; if public visibility is not verified, distinguish that from the API's published status. Do not reuse the old draft URL when the API supplies a new public permalink.
+- If publication fails or remains uncertain, state that plainly, keep the available media links, and explain the next step. If the user asks for a link while the post is still a draft, provide the usable video link and any verified login-only editor link, and explain that a public post link becomes usable after publication. Never send the known-inaccessible draft permalink alone.
+
+Example opening for the review handoff: **Draft ready — NOT PUBLISHED. It is not visible in the blog feed yet. You can watch the uploaded video here: [Watch video](actual-media-url).** Then show the complete post and ask whether to publish it now. In Russian: **Черновик готов — НЕ ОПУБЛИКОВАН. В ленте блога его пока нет. Видео доступно здесь: [Смотреть видео](actual-media-url).** Replace placeholders with actual links; do not emit them literally.
+
 ## Required user guardrails
 
 ### Confirm the complete post before publication
@@ -23,6 +37,10 @@ Here ffmpeg means the FFmpeg command-line executable installed on the host. Invo
 Expect attached videos to often be `.mov` (case-insensitive). Before uploading a MOV, use ffmpeg to convert it to a separate `.mp4` file; renaming the extension is not conversion. Check whether ffmpeg is installed. If missing, the user authorizes installing it through the host's normal trusted package manager or official distribution, subject to the host's execution permissions. Install only when conversion is needed. If installation is blocked, explain the limitation and stop the video upload.
 
 Create a new output file without overwriting anything (`ffmpeg -n`, with a unique destination). Prefer broadly playable H.264 video and AAC audio when audio is present, preserve orientation and aspect ratio, and use MP4 fast-start layout. Verify the converted file with ffprobe or an equivalent media inspection and provide a playable preview for the publication confirmation. Do not silently crop, trim, remove audio, or change the intended content. Keep the original MOV and converted MP4. Conversion is performed by the agent through the shell only. The separate `scripts/upload_video.py` accepts the prepared MP4 and handles upload and processing checks. For any video task, read [references/video.md](references/video.md) and follow its workflow.
+
+Before choosing conversion settings, inspect video/audio codecs, pixel format, frame rate, duration, and rotation with ffprobe. MOV and MP4 are containers: converting the container does not always require re-encoding. If the existing streams are already suitable for playback in MP4 (typically H.264/yuv420p video and AAC audio), prefer FFmpeg stream copy (`-c copy -movflags +faststart`) into a new MP4. If only audio is incompatible, copy video and encode audio only. Re-encode video only when necessary; for constrained hosts prefer a speed-oriented preset such as `veryfast` over an unexplained high-cost encode. Preserve resolution, frame rate, orientation, audio, and intended content; verify playback afterwards. See [references/video.md](references/video.md) for examples.
+
+Never run a long conversion silently with only `-loglevel error`. Enable program-readable progress (`-progress` with `-stats_period 5`) and `-nostdin`. Use a process-management method that returns control within 30–60 seconds, retain the exact process ID and a unique progress log, and check elapsed time, output time, speed, and file growth. When backgrounding on Windows, keep the helper window hidden. Report whether time is being spent on local conversion, upload, or server processing. If progress does not advance for about a minute, inspect that process and host CPU/memory/storage constraints before waiting further; do not start another conversion blindly. Keep all original and partial files, and never infer FFmpeg duration from the whole chat-turn timer. Diagnose named settings only; never dump the entire environment.
 
 ### Never delete within this skill
 
@@ -80,7 +98,7 @@ Report `http_status`, `wp_code`, `wp_message`, and `phase` when present. `rest_n
    python <skill-dir>/scripts/blog.py --config <active-veles-config.json> get --post-id <returned-positive-id>
    ```
 
-8. Compare title, body, status, and images. Standard read-back uses `context=edit` and `title.raw`/`content.raw`; author-app returns its own response shape. WordPress may sanitize HTML. Report the actual ID/link and distinguish API acceptance, a draft, and independently verified public visibility.
+8. Compare title, body, status, and images. Standard read-back uses `context=edit` and `title.raw`/`content.raw`; author-app returns its own response shape. WordPress may sanitize HTML. Lead the result with the explicit publication state and automatically include the usable links according to the status/link rules above. IDs are secondary diagnostic details, never substitutes for clickable links.
 
 ## Failures and unsupported operations
 
