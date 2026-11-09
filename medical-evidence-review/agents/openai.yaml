@@ -1,0 +1,7 @@
+interface:
+  display_name: "Медицинские источники"
+  short_description: "Рекомендации и исследования по медицинскому вопросу"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#0D9488"
+  default_prompt: "Используй $medical-evidence-review для поиска и сопоставления источников по моему медицинскому вопросу."

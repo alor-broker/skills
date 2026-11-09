@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitLab"
+  short_description: "Проекты, задачи, слияния и конвейеры GitLab"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#F97316"
+  default_prompt: "Используй $gitlab-skill для проверки проекта и состояния конвейеров GitLab."

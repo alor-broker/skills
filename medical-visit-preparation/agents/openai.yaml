@@ -1,0 +1,7 @@
+interface:
+  display_name: "Подготовка к приёму"
+  short_description: "Краткая история и вопросы для встречи с врачом"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#14B8A6"
+  default_prompt: "Используй $medical-visit-preparation для подготовки краткой истории и вопросов к приёму врача."

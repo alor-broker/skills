@@ -1,0 +1,7 @@
+interface:
+  display_name: "Разработка веб-приложений"
+  short_description: "Next.js, SQLite, Drizzle и размещение в Railway"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#2563EB"
+  default_prompt: "Используй $web-development для разработки веб-приложения на Next.js, SQLite и Drizzle."

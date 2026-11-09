@@ -1,0 +1,7 @@
+interface:
+  display_name: "Данные FDA"
+  short_description: "Инструкции, отзывы и сведения о лекарствах FDA"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#0284C7"
+  default_prompt: "Используй $fda-database для поиска официальных сведений FDA об указанном препарате."

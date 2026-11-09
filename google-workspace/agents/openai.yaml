@@ -1,0 +1,7 @@
+interface:
+  display_name: "Google Workspace"
+  short_description: "Почта, календарь, документы и таблицы Google"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#2563EB"
+  default_prompt: "Используй $google-workspace для работы с моей почтой, календарём или документами Google."

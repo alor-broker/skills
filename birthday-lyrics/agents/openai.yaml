@@ -1,0 +1,7 @@
+interface:
+  display_name: "Лиричные песни ко дню рождения"
+  short_description: "Личные поздравления с сильным припевом и теплом"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#DB2777"
+  default_prompt: "Используй $birthday-lyrics для написания личной песни-поздравления с днём рождения."

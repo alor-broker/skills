@@ -1,0 +1,7 @@
+interface:
+  display_name: "Состав по штрихкоду"
+  short_description: "Ингредиенты и аллергены товаров Open Food Facts"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#16A34A"
+  default_prompt: "Используй $pp-open-food-facts для проверки состава и аллергенов продукта по штрихкоду."

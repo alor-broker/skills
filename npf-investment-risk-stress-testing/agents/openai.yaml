@@ -1,0 +1,7 @@
+interface:
+  display_name: "Инвестиционные риски НПФ"
+  short_description: "Факторы риска и стресс-сценарии для инвестиций"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#DC2626"
+  default_prompt: "Используй $npf-investment-risk-stress-testing для разбора инвестиционных рисков и стресс-сценариев НПФ."

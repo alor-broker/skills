@@ -1,0 +1,7 @@
+interface:
+  display_name: "Стратегия пенсионных активов"
+  short_description: "Рынки, риски и варианты инвестиционных решений НПФ"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#059669"
+  default_prompt: "Используй $npf-pension-asset-strategy для разбора стратегии пенсионных активов на основе доступных данных."

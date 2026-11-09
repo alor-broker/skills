@@ -1,0 +1,7 @@
+interface:
+  display_name: "Анализ эмитента"
+  short_description: "Бизнес, долг, оценка и условия ценной бумаги"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#4F46E5"
+  default_prompt: "Используй $npf-issuer-investment-analysis для инвестиционного анализа указанного эмитента и ценной бумаги."

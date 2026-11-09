@@ -1,0 +1,7 @@
+interface:
+  display_name: "Лабораторные анализы"
+  short_description: "Показатели, единицы, интервалы и динамика анализов"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#06B6D4"
+  default_prompt: "Используй $medical-lab-results для объяснения моих лабораторных результатов с учётом единиц и интервалов отчёта."

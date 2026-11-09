@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub"
+  short_description: "Задачи, запросы на слияние и проверки GitHub"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6366F1"
+  default_prompt: "Используй $github для разбора задач и запросов на слияние в указанном репозитории GitHub."

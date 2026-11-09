@@ -1,0 +1,7 @@
+interface:
+  display_name: "Сверка лекарств"
+  short_description: "Лекарства, добавки, аллергии и расхождения в списках"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#8B5CF6"
+  default_prompt: "Используй $medication-reconciliation для сверки списка лекарств, добавок и аллергий."

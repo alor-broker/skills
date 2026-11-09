@@ -1,0 +1,7 @@
+interface:
+  display_name: "Навигация по симптомам"
+  short_description: "История симптомов и оценка срочности обращения"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#E11D48"
+  default_prompt: "Используй $medical-symptom-navigation для структурирования симптомов и определения срочности обращения за помощью."

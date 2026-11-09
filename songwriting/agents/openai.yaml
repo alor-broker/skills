@@ -1,0 +1,7 @@
+interface:
+  display_name: "Создание песен"
+  short_description: "Текст, припев, певучесть и музыкальное направление"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#9333EA"
+  default_prompt: "Используй $songwriting для написания песни с выразительным припевом по моей идее."

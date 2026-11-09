@@ -1,0 +1,7 @@
+interface:
+  display_name: "Рыночные сценарии НПФ"
+  short_description: "Ставки, инфляция, валюта и сценарии для рынков"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#7C3AED"
+  default_prompt: "Используй $npf-market-scenario-analysis для анализа рыночных сценариев и их последствий для решений НПФ."

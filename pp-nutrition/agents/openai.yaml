@@ -1,0 +1,7 @@
+interface:
+  display_name: "Пищевая ценность продуктов"
+  short_description: "Состав продуктов и расчёт блюд по данным USDA"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#65A30D"
+  default_prompt: "Используй $pp-nutrition для сравнения пищевой ценности продуктов по данным USDA."

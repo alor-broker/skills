@@ -1,0 +1,7 @@
+interface:
+  display_name: "Качество отчётности НПФ"
+  short_description: "Происхождение, согласованность и проверка показателей"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#0284C7"
+  default_prompt: "Используй $npf-reporting-quality-review для проверки определений и согласованности показателей отчётности."

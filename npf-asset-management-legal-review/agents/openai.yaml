@@ -1,0 +1,7 @@
+interface:
+  display_name: "Правовые вопросы УК и НПФ"
+  short_description: "Нормы, источники и правовые риски управления активами"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#A16207"
+  default_prompt: "Используй $npf-asset-management-legal-review для подготовки основанного на источниках разбора правового вопроса УК и НПФ."

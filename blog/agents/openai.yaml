@@ -1,0 +1,7 @@
+interface:
+  display_name: "Публикации в блоге"
+  short_description: "Статьи, изображения и видео для WordPress"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#EA580C"
+  default_prompt: "Используй $blog для подготовки черновика статьи для моего блога."
